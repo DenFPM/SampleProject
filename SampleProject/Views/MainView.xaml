@@ -84,25 +84,35 @@
                     <Grid.Background>
                         <ImageBrush ImageSource="{Binding ImageSourceBackground}"/>
                     </Grid.Background>
-                    <ListView Margin="2,41,0,199" Width="Auto" ItemsSource="{Binding Path=playlists, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" HorizontalContentAlignment="Left" FontSize="28" FontFamily="Arial Black" Foreground="White" FontStretch="Normal">
+                    <ListView Name="ListView1" Margin="20,-1,0,592" Width="443" ItemsSource="{Binding Path=Playlists, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" HorizontalContentAlignment="Left" FontSize="28" FontFamily="Arial Black" Foreground="White" FontStretch="Normal">
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="MouseDoubleClick">
+                                <i:InvokeCommandAction 
+                        Command="{Binding GetPlaylistName}"
+                        CommandParameter="{Binding ElementName=ListView1, Path=SelectedItem}"/>
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+
                         <ListView.View>
 
                             <GridView>
-                                <GridViewColumn Header="Artist"  Width="Auto" DisplayMemberBinding="{Binding Path=ArtistName , UpdateSourceTrigger=PropertyChanged}"/>
-                                <GridViewColumn Header="Song " Width="890" DisplayMemberBinding="{Binding Path=SongName , UpdateSourceTrigger=PropertyChanged}"/>
-                                <GridViewColumn Header="Duration" Width="Auto" DisplayMemberBinding="{Binding Path=Duration , UpdateSourceTrigger=PropertyChanged}"/>
-                                <GridViewColumn Header="Image" Width="Auto">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Image Source="{Binding Path=ImageUrl, UpdateSourceTrigger=PropertyChanged}" MaxHeight="100" Stretch="UniformToFill"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
+                                <GridViewColumn Header="Playlists"  Width="Auto" DisplayMemberBinding="{Binding Path=PlaylistName , UpdateSourceTrigger=PropertyChanged}"/>
+
+
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    <Button Content="More" Visibility ="{Binding VisibilytiCommandButton, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Command="{Binding MoreCommand}"    BorderBrush="White"  Background="Transparent" HorizontalAlignment="Left" Margin="663,583,0,0" VerticalAlignment="Top" Width="190" FontSize="29" Height="51"/>
-                    <Button Content="Logout" Command="{Binding LogoutCommand}" BorderBrush="White"  Background="Transparent" Width="190" FontSize="29" Height="51" HorizontalAlignment="Left" Margin="1300,662,0,0" VerticalAlignment="Top"/>
+                    <ListView Name="Traks" Margin="28,198,0,125" Width="Auto" ItemsSource="{Binding Path=Tracks, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" HorizontalContentAlignment="Left" FontSize="28" FontFamily="Arial Black" Foreground="White" FontStretch="Normal">
+                        <ListView.View>
+
+                            <GridView>
+                                <GridViewColumn Header="Artist"  Width="Auto" DisplayMemberBinding="{Binding Path=Artist, UpdateSourceTrigger=PropertyChanged}"/>
+                                <GridViewColumn Header="Song name"  Width="1000" DisplayMemberBinding="{Binding Path=Title, UpdateSourceTrigger=PropertyChanged}"/>
+                                <GridViewColumn Header="Duration"  Width="Auto" DisplayMemberBinding="{Binding Path=Duration, UpdateSourceTrigger=PropertyChanged}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    <Button Content="Logout" Command="{Binding LogoutCommand}" BorderBrush="White"  Background="Transparent" Width="190" FontSize="29" Height="51" HorizontalAlignment="Left" Margin="57,664,0,0" VerticalAlignment="Top"/>
                 </Grid>
             </TabItem>
 

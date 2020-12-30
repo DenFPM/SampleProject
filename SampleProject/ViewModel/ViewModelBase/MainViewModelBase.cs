@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using Egor92.MvvmNavigation;
-using JetBrains.Annotations;
 using SampleProject.Backend;
 using SampleProject.Backend.Model;
 

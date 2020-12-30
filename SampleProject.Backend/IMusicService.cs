@@ -1,5 +1,6 @@
 ﻿using SampleProject.Backend.Model;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 namespace Model.MusicService
@@ -10,7 +11,6 @@ namespace Model.MusicService
     /// </summary>
     public interface IMusicService
     {
-
         Task<List<Track>> GetPlaylists();
         Task<List<Track>> GetFavorites();
         Task<List<Artist>> GetArtists();
@@ -34,7 +34,8 @@ namespace Model.MusicService
 
         Task AddTrackToFavorites(Track track);
 
-        Task Authorize();
+        Task<Deserialize> Authorize(string login, string password);
+        Task<ObservableCollection<Playlist>> ParsePlaylistFromJson();
         Task Logout();
         bool IsAuthenticated();
     }

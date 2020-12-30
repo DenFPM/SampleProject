@@ -14,13 +14,12 @@ namespace SampleProject.Views
         }
         
         public static readonly DependencyProperty LoginPropertyProperty =
-        DependencyProperty.Register("Exmple: Brivka@gmail.com", typeof(string), typeof(Login), new UIPropertyMetadata(String.Empty));
+        DependencyProperty.Register("Brivka2017@gmail.com", typeof(string), typeof(Login), new UIPropertyMetadata(String.Empty));
+        
         public string LoginProperty
         {
             get { return (string)GetValue(LoginPropertyProperty); }
             set { SetValue(LoginPropertyProperty, value); }
         }
-
-        
     }
 }

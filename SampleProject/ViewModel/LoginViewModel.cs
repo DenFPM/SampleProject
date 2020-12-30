@@ -1,9 +1,10 @@
 ﻿using Egor92.MvvmNavigation;
 using Egor92.MvvmNavigation.Abstractions;
+using Model.MusicService;
+using SampleProject.Backend.Model;
 using SampleProject.Constants;
 using SampleProject.ViewModel.ViewModelBase;
 using SampleProject.Views;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Runtime.Serialization.Json;
@@ -16,6 +17,7 @@ namespace SampleProject.ViewModel
 {
     public class LoginViewModel : MainViewModelBase
     {
+        
         public string PasswordString { get; set; }
         public string LoginString { get; set; }
         public string ImageSource { get; set; }
@@ -44,11 +46,11 @@ namespace SampleProject.ViewModel
                 return;
             }
 
-            Deserialize1 responseObj = await Authorization(LoginString, PasswordString);
+            Deserialize responseObj = await Auth(Client);
 
             if (IsConnection)
             {
-                if (responseObj.username != null)
+                if (responseObj.UserName != null)
                 {
                     NavigationManager.Navigate(NavigationKeys.Main);
                 }
@@ -59,47 +61,9 @@ namespace SampleProject.ViewModel
                 }
             }
         }
-        
-        public async Task<Deserialize1> Authorization(string login, string password)
+        public Task<Deserialize> Auth(IMusicService musicService)
         {
-            var values = new Dictionary<string, string>
-            {
-                  { "action", "login" },
-                  { "email", login },
-                  {"password", password }
-            };
-            try
-            {
-                var content = new FormUrlEncodedContent(values);
-
-                var response = await client.PostAsync("https://api-v2.hearthis.at/login/", content);
-
-                var responseString = response.Content.ReadAsStringAsync();
-
-                using (FileStream fstream = new FileStream(@$"{Directory.GetCurrentDirectory()}\user.json", FileMode.OpenOrCreate))
-                {
-                    byte[] array = System.Text.Encoding.Default.GetBytes(responseString.Result);
-                    fstream.Write(array, 0, array.Length);
-                }
-
-                using (var ms = new MemoryStream(Encoding.Unicode.GetBytes(responseString.Result)))
-                {
-                    DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(Deserialize1));
-                    Deserialize1 bsObj2 = (Deserialize1)deserializer.ReadObject(ms);
-
-                    return bsObj2;
-                }
-            }
-            catch(HttpRequestException ex)
-            {
-                MessageBoxResult messageBoxResult = System.Windows.MessageBox.Show("Connection to enthernet fallen");
-                IsConnection = false;
-
-                return new Deserialize1();
-            }
-            
-            
+            return musicService.Authorize(LoginString, PasswordString);
         }
-        
     }
 }

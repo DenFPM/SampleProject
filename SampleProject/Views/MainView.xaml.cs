@@ -15,7 +15,7 @@ namespace SampleProject
 
         private void TabItem_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if ((DataContext as MainViewModel).playlists.Count == 0)
+            if ((DataContext as MainViewModel).Playlists.Count == 0)
             {
                 (DataContext as MainViewModel).PlaylistOpenCommand.Execute(sender);
             }

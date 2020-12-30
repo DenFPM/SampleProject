@@ -9,20 +9,14 @@ namespace SampleProject.Backend.Model
     [AddINotifyPropertyChangedInterface]//attribute what dedicated to fix all the problems with INotifyPropertyChanged interface(you dont need to call RaisePropertyChanged() on every property)
     public class Playlist : ModelBase
     {
-        public Playlist(string songName, string artistName, string duration, string imageURL)
+        public Playlist(string playlistName, List<Track> tracks)
         {
-            SongName = songName;
-            ArtistName = artistName;
-            Duration = duration;
-            ImageUrl = imageURL;
+            PlaylistName = playlistName;
+            AllTracks = tracks;
         }
-        public string SongName{ get;set; }
+        public string PlaylistName { get; set; }
         public string Id { get; set; }
         public List<Track> AllTracks { get; set; }
-        public string Duration { get; set; }
-        public string ImageUrl { get; set; }
-        public string Title { get; set; }
-        public string ArtistName { get; set; }
-        public string Album { get; set; }
     }
 }
+

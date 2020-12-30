@@ -10,213 +10,76 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using System.Runtime.Serialization.Json;
 using System.Windows;
 using System.Collections.ObjectModel;
 using PropertyChanged;
 using SampleProject.Constants;
+using Model.MusicService;
 
 namespace SampleProject.ViewModel
 {
-    
-    [AddINotifyPropertyChangedInterface]
-    public class PlaylistHandler 
-    {
-        public PlaylistHandler()
-        {
-            playlists = new List<Playlist>();
-        }
-
-        public List<Playlist> playlists { get; set; }
-
-        public void Add(Playlist playlist)
-        {
-            playlists.Add(playlist);
-        }
-    }
-
     [AddINotifyPropertyChangedInterface]
     public class MainViewModel : MainViewModelBase
     {
+        private RelayCommand getPlaylistName;
         public RelayCommand CSVOpenCommand { get; set; }
         public RelayCommand PlaylistOpenCommand { get; set; }
-        public RelayCommand MoreCommand { get; set; }
         public RelayCommand LogoutCommand { get; set; }
-
-        public ObservableCollection<Playlist> playlists { get; private set; } = new ObservableCollection<Playlist>();
-        public ObservableCollection<Playlist> playlistsRemainder { get; private set; } = new ObservableCollection<Playlist>();
+        public RelayCommand GetPlaylistName { get { return getPlaylistName ?? (getPlaylistName = new RelayCommand(x => DoStuff(x as Playlist))); } set { getPlaylistName = value; } }
         
+        public ObservableCollection<Track> Tracks { get; set; } = new ObservableCollection<Track>();
+        public ObservableCollection<Playlist> Playlists { get; private set; } = new ObservableCollection<Playlist>();
+        public ObservableCollection<Playlist> PlaylistsTemp { get; private set; } = new ObservableCollection<Playlist>();
+
         public Visibility VisibilytiCommandButton { get; set; }
 
         public string PlaylistInfoJson { get; set; }
         public string ImageSourceBackground { get; set; }
+
         public MainViewModel(NavigationManager navigationManager) : base(navigationManager)
         {
             ImageSourceBackground = Directory.GetCurrentDirectory() + @"\BackgroundImage\BackGroundMain.png";
 
             CSVOpenCommand = new RelayCommand(obj => OpenCSV());
 
-            PlaylistOpenCommand = new RelayCommand( obj => ParsePlaylistFromJson());
-
-            MoreCommand = new RelayCommand(obj => AddMoreTracksToView());
+            PlaylistOpenCommand = new RelayCommand( obj => StartConveirToGetPlaylist(Client));
 
             LogoutCommand = new RelayCommand(obj => Logout());
         }
 
-        public async Task ParsePlaylistFromJson()
+        public async Task StartConveirToGetPlaylist(IMusicService musicService)
         {
-            
-
-            using (StreamReader sr = new StreamReader(@$"{Directory.GetCurrentDirectory()}\user.json"))
+            try
             {
-                PlaylistInfoJson = await sr.ReadToEndAsync();
+                PlaylistsTemp = await musicService.ParsePlaylistFromJson();
+                for (int i = 0; i < PlaylistsTemp.Count; i++)
+                {
+                    Playlists.Add(PlaylistsTemp[i]);
+                }
             }
-            using (var ms = new MemoryStream(Encoding.Unicode.GetBytes(PlaylistInfoJson)))
+            catch(ArgumentNullException eNullExc)
             {
-                DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(Deserialize1));
-                Deserialize1 dsObj2 = (Deserialize1)deserializer.ReadObject(ms);
-
-                GetPlaylist(dsObj2.username);
+                MessageBox.Show(eNullExc.Message);
             }
         }
-
-        public async Task GetPlaylist(string username)
+        private void DoStuff(Playlist item)
         {
-            var client = new System.Net.Http.HttpClient();
-
-            var response = await client.GetAsync($@"http://api-v2.hearthis.at/{username.ToLower()}/?type=playlists");
-
-            string orderJson = await response.Content.ReadAsStringAsync();
-
-            PlaylistDeserial ObjOrderList = new PlaylistDeserial();
-            
-            List<PlaylistDeserial> products = JsonConvert.DeserializeObject<List<PlaylistDeserial>>(orderJson);
-
-            if (products.Count == 0)
+            if (Tracks.Count != 0)
             {
-                MessageBoxResult messageBoxResult = MessageBox.Show("your playlist is empty, no music yet :(");
-                return;
+                Tracks.Clear();
             }
-            
-            for (int i = 0; i < products.Count ; i++)
+
+            for (int i = 0; i < Playlists.Count; i++)
             {
-                GetSongsFromCurentPlaylist(products[i].uri);
+                if (Playlists[i].PlaylistName == item.PlaylistName)
+                {
+                    for (int j = 0; j < Playlists[i].AllTracks.Count; j++)
+                    {
+                        Tracks.Add(Playlists[i].AllTracks[j]);
+                    }
+                }
             }
         }
-        public async Task GetSongsFromCurentPlaylist(string uri)
-        {
-            var client = new System.Net.Http.HttpClient();
-
-            var response = await client.GetAsync(uri);
-
-            string orderJson = await response.Content.ReadAsStringAsync();
-           
-            List<DeserializeSong> productsOfPlaylist = JsonConvert.DeserializeObject<List<DeserializeSong>>(orderJson);
-
-            int durationInt, second, minute;
-            bool isContainsTrack;
-
-            for (int i = 0; i < productsOfPlaylist.Count; i++)
-            {
-                isContainsTrack = false;
-
-                durationInt = Convert.ToInt32(productsOfPlaylist[i].duration);
-                minute = durationInt / 60;
-                second = durationInt % 60;
-
-                if (playlists.Count < 3)
-                {
-                    VisibilytiCommandButton = Visibility.Hidden;
-                }
-                if (playlists.Count == 3)
-                {
-                    VisibilytiCommandButton = Visibility.Visible;
-                }
-
-                if (playlists.Count >= 3)
-                {
-                    if (minute >= 60)
-                    {
-                        int hours = minute / 60;
-                        minute = minute % 60;
-
-                        playlistsRemainder.Add(new Playlist(productsOfPlaylist[i].title, productsOfPlaylist[i].user.username, $"{hours}:{minute}:{second}", productsOfPlaylist[i].thumb));
-                        continue;
-                    }
-
-                    playlistsRemainder.Add(new Playlist(productsOfPlaylist[i].title, productsOfPlaylist[i].user.username, $"{minute}:{second}", productsOfPlaylist[i].thumb));
-                    continue;
-                }
-
-                if (playlists.Count == 0)
-                {
-                    if (minute >= 60)
-                    {
-                        int hours = minute / 60;
-                        minute = minute % 60;
-
-                        playlists.Add(new Playlist(productsOfPlaylist[i].title, productsOfPlaylist[i].user.username, $"{hours}:{minute}:{second}", productsOfPlaylist[i].thumb));
-                        continue;
-                    }
-
-                    playlists.Add(new Playlist(productsOfPlaylist[i].title, productsOfPlaylist[i].user.username, $"{minute}:{second}", productsOfPlaylist[i].thumb));
-                    continue;
-                }
-
-                for(int j = 0; j < playlists.Count; j++)
-                {
-                    if (playlists[j].SongName == productsOfPlaylist[i].title)
-                    {
-                        isContainsTrack = true;
-                        break;
-                    }
-                }
-
-                if (!isContainsTrack)
-                {
-                    if (minute >= 60)
-                    {
-                        int hours = minute / 60;
-                        minute = minute % 60;
-
-                        playlists.Add(new Playlist(productsOfPlaylist[i].title, productsOfPlaylist[i].user.username, $"{hours}:{minute}:{second}", productsOfPlaylist[i].thumb));
-                        continue;
-                    }
-                    playlists.Add(new Playlist(productsOfPlaylist[i].title, productsOfPlaylist[i].user.username, $"{minute}:{second}", productsOfPlaylist[i].thumb));
-                    continue;
-                }
-                
-            }
-        }
-        public void AddMoreTracksToView()
-        {
-            bool isContainsTrack;
-            if (playlists.Count < 3)
-            {
-                MessageBoxResult messageBoxResult = MessageBox.Show("nothing to add :(");
-                return;
-            }
-            for(int i = 0; i < playlistsRemainder.Count; i++)
-            {
-                isContainsTrack = false;
-                for (int j = 0; j < playlists.Count; j++)
-                {
-                    if (playlists[j].SongName == playlistsRemainder[i].SongName)
-                    {
-                        isContainsTrack = true;
-                        break;
-                    }
-                }
-
-                if (!isContainsTrack)
-                {
-                    playlists.Add(playlistsRemainder[i]);
-                }
-                
-            }
-        }
-
         public async Task Logout()
         {
             var client = new System.Net.Http.HttpClient();
@@ -290,15 +153,7 @@ namespace SampleProject.ViewModel
             if (dt.Rows.Count < 1)
                 return;
 
-            values = dt.DefaultView.ToTable().Rows.Cast<DataRow>()
-                .Select(t => new Track(t)).ToList();
-            BeginInvokeOnMainThread(() =>
-            {
-                foreach (var item in values)
-                {
-                    MediaItems.Add(item);
-                }
-            });
+            
         }
     }
 }
